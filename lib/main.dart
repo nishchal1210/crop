@@ -360,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<String> soilMoistureLevels = ['Low', 'Medium', 'High'];
 
   Future<void> _submitData() async {
-    final url = Uri.parse('http://127.0.0.1:5000/predict_crops');
+    final url = Uri.parse('https://your-render-url.onrender.com/predict_crops');
 
     final response = await http.post(
       url,
