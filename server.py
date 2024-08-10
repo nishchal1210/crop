@@ -72,5 +72,5 @@ def predict_crops():
         app.logger.error(f"Error predicting crops: {e}")
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)

@@ -1,1 +1,1 @@
-web: gunicorn waste:app
+web: gunicorn server:app
