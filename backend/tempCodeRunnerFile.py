@@ -1,0 +1,1 @@
+predicted_crops = response.text.split(",")

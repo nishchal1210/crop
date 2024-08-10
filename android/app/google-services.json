@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "582840550120",
+    "project_id": "auth-a488c",
+    "storage_bucket": "auth-a488c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:582840550120:android:cf1bac1f4b8f843703ff5d",
+        "android_client_info": {
+          "package_name": "com.example.crop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBF4O6eJa4sB_K66wkjlTKRtb7gmgAo47Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
