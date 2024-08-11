@@ -17,22 +17,22 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
   String _selectedUnit = 'Acre';
 
   List<Map<String, String>> crops = [
-    {'name': 'Bean', 'image': 'assets/bean.png'},
-    {'name': 'Citrus', 'image': 'assets/citrus.png'},
-    {'name': 'Cotton', 'image': 'assets/cotton.png'},
-    {'name': 'Cucumber', 'image': 'assets/cucumber.png'},
-    {'name': 'Ginger', 'image': 'assets/ginger.png'},
-    {'name': 'Grape', 'image': 'assets/grape.png'},
-    {'name': 'Maize', 'image': 'assets/maize.png'},
-    {'name': 'Mango', 'image': 'assets/mango.png'},
-    {'name': 'Melon', 'image': 'assets/melon.png'},
-    {'name': 'Millet', 'image': 'assets/millet.png'},
-    {'name': 'Okra', 'image': 'assets/okra.png'},
-    {'name': 'Onion', 'image': 'assets/onion.png'},
-    {'name': 'Papaya', 'image': 'assets/papaya.png'},
-    {'name': 'Peanut', 'image': 'assets/peanut.png'},
-    {'name': 'Pea', 'image': 'assets/pea.png'},
-    {'name': 'Potato', 'image': 'assets/potato.png'},
+    {'name': 'Bean', 'image': 'lib/images/icons8-bean-60.png'},
+    {'name': 'Citrus', 'image': 'lib/images/icons8-citrus-50.png'},
+    {'name': 'Cotton', 'image': 'lib/images/icons8-cotton-64.png'},
+    {'name': 'Cucumber', 'image': 'lib/images/icons8-cucumber-48.png'},
+    {'name': 'Ginger', 'image': 'lib/images/icons8-ginger-48.png'},
+    {'name': 'Grape', 'image': 'lib/images/icons8-grape-96.png'},
+    {'name': 'Maize', 'image': 'lib/images/icons8-maize-48.png'},
+    {'name': 'Mango', 'image': 'lib/images/icons8-mango-96.png'},
+    {'name': 'Melon', 'image': 'lib/images/icons8-melon-96.png'},
+    {'name': 'Millet', 'image': 'lib/images/icons8-millet-100.png'},
+    {'name': 'Okra', 'image': 'lib/images/icons8-okra-67.png'},
+    {'name': 'Onion', 'image': 'lib/images/icons8-onion-96.png'},
+    {'name': 'Papaya', 'image': 'lib/images/icons8-papaya-96.png'},
+    {'name': 'Peanut', 'image': 'lib/images/icons8-peanut-64.png'},
+    {'name': 'Pea', 'image': 'lib/images/icons8-pea-64.png'},
+    {'name': 'Potato', 'image': 'lib/images/icons8-potato-96.png'},
   ];
 
   List<Map<String, String>> _filteredCrops = [];
