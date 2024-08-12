@@ -22,10 +22,16 @@ model = genai.GenerativeModel(
 
 # Define system prompts
 system_prompt_crop_prediction = """
-Anazyle the provided crop name and its waste, give some suggestions/ideas
-to farmers how they can create wealth from that waste, if wealth generation 
-is not possible give them some innovate idea/suggestions what can be done
-with that waste.
+
+Analyze the provided crop and its waste. Provide suggestions and ideas for farmers.
+
+1. Creative Ideas: Innovative and unconventional uses for rice straw.
+2. Wealth Generation Ideas: Practical methods for farmers to generate income from rice straw.
+3. Environmental Impact Reduction:Strategies to minimize the negative environmental effects of rice straw.
+4. Resource Optimization: Efficient ways to utilize rice straw as a valuable resource.
+
+
+Please proceed with the analysis, adhering to the structure outlined above.
 """
 
 @app.route('/submit_waste', methods=['POST'])
@@ -58,7 +64,7 @@ def predict_crops():
 
         if response.text:
          print(f"Model response: {response.text}")
-         predicted_crops = response.text.split(",")
+         predicted_crops = [response.text]
          return jsonify({"predicted_crops": predicted_crops}), 200
         else:
          return jsonify({"error": "Empty response from model"}), 500

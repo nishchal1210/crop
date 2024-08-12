@@ -193,6 +193,9 @@ class _CultivationTipsPageState extends State<CultivationTipsPage> {
 
   void _showBottomSheet() {
     if (_tips != null) {
+      // Clean up the response text
+      String cleanedTips = _cleanResponseText(_tips!);
+
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -216,10 +219,7 @@ class _CultivationTipsPageState extends State<CultivationTipsPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      _tips!,
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    _buildFormattedText(cleanedTips),
                   ],
                 );
               },
@@ -228,6 +228,46 @@ class _CultivationTipsPageState extends State<CultivationTipsPage> {
         },
       );
     }
+  }
+
+  String _cleanResponseText(String text) {
+    // Remove markdown symbols like # and *
+    text = text.replaceAll(RegExp(r'#'), '');
+    text = text.replaceAll(RegExp(r'\*\*'), '');
+    return text;
+  }
+
+  Widget _buildFormattedText(String text) {
+    // Split the text into lines
+    List<String> lines = text.split('\n');
+
+    // Build the widget list
+    List<Widget> widgets = [];
+    for (String line in lines) {
+      if (line.trim().startsWith('Week')) {
+        // Highlight "Week" headers
+        widgets.add(Text(
+          line,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange,
+          ),
+        ));
+      } else {
+        // Regular text
+        widgets.add(Text(
+          line,
+          style: TextStyle(fontSize: 16),
+        ));
+      }
+      widgets.add(SizedBox(height: 5)); // Add space between lines
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
+    );
   }
 
   @override

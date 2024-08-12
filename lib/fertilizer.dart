@@ -8,6 +8,94 @@ class FertilizerCalculatorPage extends StatefulWidget {
       _FertilizerCalculatorPageState();
 }
 
+class ResultsPage extends StatelessWidget {
+  final String geminiResponse;
+
+  ResultsPage({required this.geminiResponse});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Fertilizer Calculation Result'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: _buildResponseCards(geminiResponse),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResponseCards(String responseText) {
+    // Split the response based on the markers **1, **2, **3
+    RegExp sectionRegex = RegExp(r'\*\*\d\.\s.*?(?=\*\*\d\.|$)', dotAll: true);
+    Iterable<RegExpMatch> matches = sectionRegex.allMatches(responseText);
+
+    List<Map<String, String>> sections = [];
+
+    for (var match in matches) {
+      String sectionText = match.group(0)!.trim();
+      String title = sectionText.split('\n').first.trim();
+      String content = sectionText
+          .substring(title.length)
+          .trim()
+          .replaceAll('*', ''); // Remove * characters
+      sections.add({'title': title, 'content': content});
+    }
+
+    // Swap sorting to place **1 at the top and **2 after
+    sections.sort((a, b) {
+      if (a['title']!.contains('**1')) {
+        return -1;
+      } else if (b['title']!.contains('**1')) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    return Column(
+      children: sections.map((section) {
+        bool isGreenCard = section['title']!.contains('**1');
+        Color cardColor = isGreenCard ? Colors.green[100]! : Colors.blue[100]!;
+
+        return Card(
+          margin: EdgeInsets.symmetric(
+              vertical: 25.0, horizontal: 8.0), // Increased margin
+          color: cardColor,
+          child: Container(
+            padding: EdgeInsets.all(
+                isGreenCard ? 30.0 : 16.0), // Increased padding for green card
+            constraints: isGreenCard
+                ? BoxConstraints(
+                    minHeight: 200.0) // Set minimum height for green card
+                : BoxConstraints(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  section['title']!.replaceAll('**', ''),
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 10.0),
+                Text(
+                  section['content']!,
+                  style: TextStyle(fontSize: 16.0),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
 class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
   String _selectedCrop = 'Bean';
   double _plotSize = 5.0;
@@ -15,6 +103,8 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
   double _p = 50;
   double _k = 25;
   String _selectedUnit = 'Acre';
+
+  bool _isLoading = false;
 
   List<Map<String, String>> crops = [
     {'name': 'Bean', 'image': 'lib/images/icons8-bean-60.png'},
@@ -37,7 +127,7 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
 
   List<Map<String, String>> _filteredCrops = [];
 
-  Map<String, dynamic>? _fertilizerResults;
+  String? _geminiResponse;
 
   @override
   void initState() {
@@ -66,7 +156,8 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
                 Expanded(
                   child: TextFormField(
                     initialValue: _n.toString(),
-                    decoration: InputDecoration(labelText: 'Nutrient N'),
+                    decoration:
+                        InputDecoration(labelText: 'Nutrient N (kg/ha)'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       _n = double.tryParse(value) ?? 0.0;
@@ -77,7 +168,8 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
                 Expanded(
                   child: TextFormField(
                     initialValue: _p.toString(),
-                    decoration: InputDecoration(labelText: 'Nutrient P'),
+                    decoration:
+                        InputDecoration(labelText: 'Nutrient P (kg/ha)'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       _p = double.tryParse(value) ?? 0.0;
@@ -88,7 +180,8 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
                 Expanded(
                   child: TextFormField(
                     initialValue: _k.toString(),
-                    decoration: InputDecoration(labelText: 'Nutrient K'),
+                    decoration:
+                        InputDecoration(labelText: 'Nutrient K (kg/ha)'),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       _k = double.tryParse(value) ?? 0.0;
@@ -97,7 +190,7 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -122,7 +215,7 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
                 ),
                 Text('Hectare'),
                 Radio<String>(
-                  value: 'Gunta',
+                  value: 'Square Meter',
                   groupValue: _selectedUnit,
                   onChanged: (value) {
                     setState(() {
@@ -130,29 +223,26 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
                     });
                   },
                 ),
-                Text('Gunta'),
+                Text('Square Meter'),
               ],
             ),
             TextFormField(
               initialValue: _plotSize.toString(),
-              decoration:
-                  InputDecoration(labelText: 'Plot Size ($_selectedUnit)'),
+              decoration: InputDecoration(
+                labelText: 'Plot Size ($_selectedUnit)',
+              ),
               keyboardType: TextInputType.number,
               onChanged: (value) {
-                setState(() {
-                  _plotSize = double.tryParse(value) ?? 0.0;
-                });
+                _plotSize = double.tryParse(value) ?? 0.0;
               },
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _calculateFertilizer,
-              child: Text('Calculate'),
-            ),
-            SizedBox(height: 20),
-            _fertilizerResults != null
-                ? _buildFertilizerResult()
-                : Text('No results yet'),
+            SizedBox(height: 40),
+            _isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _calculateFertilizer,
+                    child: Text('Calculate'),
+                  ),
           ],
         ),
       ),
@@ -160,19 +250,16 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
   }
 
   void _showCropSelectionDialog() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  labelText: 'Search',
-                  prefixIcon: Icon(Icons.search),
-                ),
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Select Crop'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: InputDecoration(hintText: 'Search Crop'),
                 onChanged: (value) {
                   setState(() {
                     _filteredCrops = crops
@@ -183,105 +270,37 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
                   });
                 },
               ),
-            ),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 3,
-                children: _filteredCrops.map((crop) {
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedCrop = crop['name']!;
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          crop['image']!,
-                          width: 40,
-                          height: 40,
-                        ),
-                        Text(crop['name']!),
-                      ],
-                    ),
-                  );
-                }).toList(),
+              SizedBox(height: 10),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _filteredCrops.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      leading: Image.asset(_filteredCrops[index]['image']!),
+                      title: Text(_filteredCrops[index]['name']!),
+                      onTap: () {
+                        setState(() {
+                          _selectedCrop = _filteredCrops[index]['name']!;
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildFertilizerResult() {
-    if (_fertilizerResults == null) return Text('No results yet');
-
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Recommended Fertilizer Amounts (for one season):',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            _buildFertilizerRow(
-                'Urea',
-                _fertilizerResults!['Urea']?['kg'] ?? '0.0',
-                'kg',
-                _fertilizerResults!['Urea']?['bags'] ?? '0.0',
-                'bags'),
-            SizedBox(height: 10),
-            _buildFertilizerRow(
-                'SSP',
-                _fertilizerResults!['SSP']?['kg'] ?? '0.0',
-                'kg',
-                _fertilizerResults!['SSP']?['bags'] ?? '0.0',
-                'bags'),
-            SizedBox(height: 10),
-            _buildFertilizerRow(
-                'MOP',
-                _fertilizerResults!['MOP']?['kg'] ?? '0.0',
-                'kg',
-                _fertilizerResults!['MOP']?['bags'] ?? '0.0',
-                'bags'),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to product finding page or perform another action
-              },
-              child: Text('Find Products'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFertilizerRow(
-      String name, String kg, String kgUnit, String bags, String bagUnit) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(name, style: TextStyle(fontSize: 16)),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text('$kg $kgUnit'),
-            Text('$bags $bagUnit'),
-          ],
-        ),
-      ],
-    );
-  }
-
   void _calculateFertilizer() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final response = await http.post(
       Uri.parse('http://127.0.0.1:5000/calculate'),
       headers: <String, String>{
@@ -297,10 +316,18 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
       }),
     );
 
+    setState(() {
+      _isLoading = false;
+    });
+
     if (response.statusCode == 200) {
-      setState(() {
-        _fertilizerResults = jsonDecode(response.body);
-      });
+      String geminiResponse = jsonDecode(response.body)['gemini_response'];
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultsPage(geminiResponse: geminiResponse),
+        ),
+      );
     } else {
       _showErrorDialog('Failed to calculate fertilizer. Please try again.');
     }
@@ -309,16 +336,16 @@ class _FertilizerCalculatorPageState extends State<FertilizerCalculatorPage> {
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: Text('Error'),
           content: Text(message),
-          actions: <Widget>[
+          actions: [
             TextButton(
-              child: Text('OK'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.pop(context);
               },
+              child: Text('OK'),
             ),
           ],
         );

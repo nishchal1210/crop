@@ -26,7 +26,7 @@ As an agricultural specialist, you are tasked with analyzing the provided soil d
 
 Your responsibilities:
 
-1. Crop Recommendations: Suggest the most suitable crops to grow based on the soil data.(also provide image of each crop)
+1. Crop Recommendations: Suggest the most suitable crops to grow based on the soil data.
 2. Agricultural Advice: Provide additional agricultural advice based on the analysis.
 
 Please proceed with the analysis, adhering to the structure outlined above.

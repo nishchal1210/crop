@@ -200,7 +200,8 @@ class _WasteSelectionScreenState extends State<WasteSelectionScreen> {
         final responseData = json.decode(response.body);
         final cleanedPredictedCrops =
             (responseData['predicted_crops'] as List<dynamic>)
-                .map((crop) => crop.toString().replaceAll('*', ''))
+                .map((crop) =>
+                    crop.toString().replaceAll('*', '').replaceAll('#', ''))
                 .toList();
 
         Navigator.of(context).push(
@@ -234,16 +235,55 @@ class ResultsPage extends StatelessWidget {
       ),
       body: Center(
         child: predictedCrops.isNotEmpty
-            ? ListView.builder(
-                itemCount: predictedCrops.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(predictedCrops[index]),
-                  );
-                },
+            ? SingleChildScrollView(
+                child: _buildResultCards(predictedCrops[0]),
               )
             : Text('No predictions available'),
       ),
     );
+  }
+
+  Widget _buildResultCards(String resultText) {
+    // Regular expression to split text on any integer followed by a space or punctuation
+    List<String> components = resultText.split(RegExp(r'(?<=\d[\s.,:])'));
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: components.length,
+      itemBuilder: (context, index) {
+        // Skip empty components
+        if (components[index].trim().isEmpty) {
+          return SizedBox.shrink();
+        }
+
+        return Card(
+          margin: EdgeInsets.all(8.0),
+          color: _getCardColor(index),
+          child: Padding(
+            padding: EdgeInsets.all(12.0),
+            child: Text(
+              components[index].trim(),
+              style: TextStyle(fontSize: 16.0),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Color _getCardColor(int index) {
+    switch (index % 4) {
+      case 0:
+        return Colors.blue[100]!;
+      case 1:
+        return Colors.green[100]!;
+      case 2:
+        return Colors.orange[100]!;
+      case 3:
+        return Colors.purple[100]!;
+      default:
+        return Colors.grey[100]!;
+    }
   }
 }
